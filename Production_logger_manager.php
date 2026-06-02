@@ -10,13 +10,17 @@ $dataloggersConfig = $crud->read();
 
 // --- ADD ---
 if (isset($_POST['add'])) {
-    $data = ['logger_id' => $_POST['logger_id'], 'path' => $_POST['path']];
+    $data = [
+        'logger_id'   => $_POST['logger_id'],
+        'path'        => $_POST['path'],
+        'server_name' => $_POST['server_name']
+    ];
+
     if ($crud->create($data)) {
         header("Location: logger_manager.php?msg=added");
         exit();
     }
 }
-
 // --- DELETE ---
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
@@ -28,12 +32,14 @@ if (isset($_GET['delete'])) {
     }
 }
 
-// --- UPDATE ---
+/// --- UPDATE ---
 if (isset($_POST['update'])) {
     $data = [
-        'logger_id' => $_POST['logger_id'],
-        'path' => $_POST['path']
+        'logger_id'   => $_POST['logger_id'],
+        'path'        => $_POST['path'],
+        'server_name' => $_POST['server_name']
     ];
+
     $cond = ['ID' => $_POST['ID']];
 
     if ($crud->update($data, $cond)) {
@@ -53,7 +59,15 @@ if (isset($_GET['msg'])) {
 <h2>📌 Add Logger Path</h2>
 <form method="post">
     Logger ID: <input type="text" name="logger_id" required>
+
     Path: <input type="text" name="path" required>
+
+    Server:
+    <select name="server_name" required>
+        <option value="prod1">prod1</option>
+        <option value="prod3">prod3</option>
+    </select>
+
     <button type="submit" name="add">➕ Add</button>
 </form>
 
@@ -65,6 +79,7 @@ if (isset($_GET['msg'])) {
 <th>ID</th>
 <th>Logger</th>
 <th>Path</th>
+<th>Server Name</th>
 <th>Action</th>
 </tr>
 
@@ -74,6 +89,7 @@ echo "<tr>
 <td>{$row['ID']}</td>
 <td>{$row['logger_id']}</td>
 <td>{$row['path']}</td>
+<td>{$row['server_name']}</td>
 <td>
 <a href='?edit={$row['ID']}'>✏️ Edit</a> |
 
@@ -87,7 +103,6 @@ style='background:#dc3545;color:white;border:none;padding:5px 10px;border-radius
 }
 ?>
 </table>
-
 <?php
 // EDIT FORM
 if (isset($_GET['edit'])) {
@@ -105,8 +120,27 @@ if (isset($_GET['edit'])) {
 <h2>✏️ Edit Record</h2>
 <form method="post">
 <input type="hidden" name="ID" value="<?php echo $row['ID']; ?>">
-Logger ID: <input type="text" name="logger_id" value="<?php echo $row['logger_id']; ?>" required>
-Path: <input type="text" name="path" value="<?php echo $row['path']; ?>" required>
+Logger ID:
+<input type="text" name="logger_id"
+value="<?php echo $row['logger_id']; ?>" required>
+
+Path:
+<input type="text" name="path"
+value="<?php echo $row['path']; ?>" required>
+
+Server:
+<select name="server_name">
+    <option value="prod1"
+    <?php if($row['server_name']=="prod1") echo "selected"; ?>>
+    prod1
+    </option>
+
+    <option value="prod3"
+    <?php if($row['server_name']=="prod3") echo "selected"; ?>>
+    prod3
+    </option>
+</select>
+
 <button type="submit" name="update">💾 Update</button>
 </form>
 
