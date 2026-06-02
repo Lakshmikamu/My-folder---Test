@@ -5,185 +5,183 @@ $database = new Database('db_config.json');
 $db = $database->connect();
 $table = 'file_router';
 $crud = new CRUD($db, $table);
-
+/*$conditions = [
+    'alert_type' => 'Datalogger_Comm_Loss',
+    'active_status' => 1
+];*/
 $dataloggersConfig = $crud->read();
 
-// --- ADD ---
-if (isset($_POST['add'])) {
-    $data = [
-        'logger_id'   => $_POST['logger_id'],
-        'path'        => $_POST['path'],
-        'server_name' => $_POST['server_name']
-    ];
 
-    if ($crud->create($data)) {
+// Database connection
+/*$conn = mysqli_connect("localhost", "root", "#Renewgrid1", "test_db"); 
+if (!$conn) {
+    die("❌ Connection failed: " . mysqli_connect_error());
+}*/
+
+// --- ADD new record ---
+if (isset($_POST['add'])) {
+    $logger_id = $_POST['logger_id'];
+    $path = $_POST['path'];
+
+    /*$sql = "INSERT INTO file_router (logger_id, path) VALUES ('$logger_id', '$path')";
+    if (mysqli_query($conn, $sql)) {
+        // Redirect to same page to refresh table
+        header("Location: ".$_SERVER['PHP_SELF']."?msg=added");
+        exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " . mysqli_error($conn) . "</p>";
+    }*/
+
+    $data = ['logger_id' => $logger_id, 'path' => $path];
+    $addResult = $crud->create($data);
+    if ($addResult) {
         header("Location: logger_manager.php?msg=added");
         exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " ."Add failed for ID:".$id. "</p>"."\n";
     }
 }
-// --- DELETE ---
+
+// --- DELETE record ---
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-
-    $deleteConditions = ['ID' => $id];
-    if ($crud->delete($deleteConditions)) {
-        header("Location: logger_manager.php?msg=deleted");
+    /*$sql = "DELETE FROM file_router WHERE ID=$id";
+    if (mysqli_query($conn, $sql)) {
+        header("Location: ".$_SERVER['PHP_SELF']."?msg=deleted");
         exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " . mysqli_error($conn) . "</p>";
+    }*/
+
+    $deleteConditions = [
+        'ID' => $id
+    ];
+    $deleteResult = $crud->delete($deleteConditions);
+
+    if ($deleteResult) {
+        header("Location: logger_manager.php?msg=deleted");        
+        exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " ."Delete failed for ID:".$id. "</p>"."\n";
     }
+
 }
 
-/// --- UPDATE ---
+// --- UPDATE record ---
 if (isset($_POST['update'])) {
+    $id = $_POST['ID'];
+    $logger_id = $_POST['logger_id'];
+    $path = $_POST['path'];
+
+    /*$sql = "UPDATE file_router SET logger_id='$logger_id', path='$path' WHERE ID=$id";
+    if (mysqli_query($conn, $sql)) {
+        header("Location: ".$_SERVER['PHP_SELF']."?msg=updated");
+        exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " . mysqli_error($conn) . "</p>";
+    }*/
+
     $data = [
-        'logger_id'   => $_POST['logger_id'],
-        'path'        => $_POST['path'],
-        'server_name' => $_POST['server_name']
+        'logger_id' => $logger_id,
+        'path' => $path
     ];
 
-    $cond = ['ID' => $_POST['ID']];
+    $updateConditions = [
+        'ID' => $id
+    ];
 
-    if ($crud->update($data, $cond)) {
-        header("Location: logger_manager.php?msg=updated");
+    $updateResult = $crud->update($data, $updateConditions);
+
+    if ($updateResult) {
+        header("Location: logger_manager.php?msg=updated");           
         exit();
+    } else {
+        echo "<p style='color:red;'>❌ Error: " ."Update failed for ID:".$id. "</p>"."\n";
     }
+
+
 }
 
-// --- Messages ---
+
+
+// --- Show messages after redirect ---
 if (isset($_GET['msg'])) {
-    if ($_GET['msg'] == "added") echo "<p style='color:green;'>✅ Added</p>";
-    if ($_GET['msg'] == "deleted") echo "<p style='color:green;'>🗑️ Deleted</p>";
-    if ($_GET['msg'] == "updated") echo "<p style='color:blue;'>✏️ Updated</p>";
+    if ($_GET['msg'] == "added") echo "<p style='color:green;'>✅ Record added successfully!</p>";
+    if ($_GET['msg'] == "deleted") echo "<p style='color:green;'>🗑️ Record deleted successfully!</p>";
+    if ($_GET['msg'] == "updated") echo "<p style='color:blue;'>✏️ Record updated successfully!</p>";
 }
+
 ?>
 
 <h2>📌 Add Logger Path</h2>
 <form method="post">
     Logger ID: <input type="text" name="logger_id" required>
-
     Path: <input type="text" name="path" required>
-
-    Server:
-    <select name="server_name" required>
-        <option value="prod1">prod1</option>
-        <option value="prod3">prod3</option>
-    </select>
-
     <button type="submit" name="add">➕ Add</button>
 </form>
 
 <hr>
 
 <h2>📂 Current File Router Records</h2>
-<table border="1" cellpadding="5">
-<tr>
-<th>ID</th>
-<th>Logger</th>
-<th>Path</th>
-<th>Server Name</th>
-<th>Action</th>
-</tr>
+<table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+        <th>Serial No</th>
+        <th>Logger ID</th>
+        <th>Path</th>
+        <th>Action</th>
+    </tr>
 
 <?php
-foreach($dataloggersConfig as $row){
-echo "<tr>
-<td>{$row['ID']}</td>
-<td>{$row['logger_id']}</td>
-<td>{$row['path']}</td>
-<td>{$row['server_name']}</td>
-<td>
-<a href='?edit={$row['ID']}'>✏️ Edit</a> |
+// Fetch all records
+/*$result = mysqli_query($conn, "SELECT * FROM file_router");
+if (mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<tr>
+                <td>".$row['ID']."</td>
+                <td>".$row['logger_id']."</td>
+                <td>".$row['path']."</td>
+                <td>
+                    <a href='?edit=".$row['ID']."'>✏️ Edit</a> | 
+                    <a href='?delete=".$row['ID']."' onclick='return confirm(\"Delete this record?\");'>❌ Delete</a>
+                </td>
+              </tr>";
+    }
+} else {
+    echo "<tr><td colspan='4'>No records found</td></tr>";
+}*/
 
-<button onclick=\"confirmDelete('{$row['ID']}','{$row['logger_id']}')\"
-style='background:#dc3545;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;'>
-❌ Delete
-</button>
+    foreach($dataloggersConfig as $key => $row){
+                echo "<tr>
+                <td>".$row['ID']."</td>
+                <td>".$row['logger_id']."</td>
+                <td>".$row['path']."</td>
+                <td>
+                    <a href='?edit=".$row['ID']."'>✏️ Edit</a> | 
+                    <a href='?delete=".$row['ID']."' onclick='return confirm(\"Delete this record?\");'>❌ Delete</a>
+                </td>
+              </tr>";
 
-</td>
-</tr>";
-}
-?>
-</table>
-<?php
-// EDIT FORM
-if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
-
-    foreach($dataloggersConfig as $r){
-        if($r['ID'] == $id){
-            $row = $r;
-            break;
-        }
     }
 ?>
+</table>
 
-<hr>
-<h2>✏️ Edit Record</h2>
-<form method="post">
-<input type="hidden" name="ID" value="<?php echo $row['ID']; ?>">
-Logger ID:
-<input type="text" name="logger_id"
-value="<?php echo $row['logger_id']; ?>" required>
+<?php
+// --- EDIT FORM ---
+if (isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    #$result = mysqli_query($conn, "SELECT * FROM file_router WHERE ID=$id");
+    #$row = mysqli_fetch_assoc($result);
 
-Path:
-<input type="text" name="path"
-value="<?php echo $row['path']; ?>" required>
 
-Server:
-<select name="server_name">
-    <option value="prod1"
-    <?php if($row['server_name']=="prod1") echo "selected"; ?>>
-    prod1
-    </option>
+    ?>
 
-    <option value="prod3"
-    <?php if($row['server_name']=="prod3") echo "selected"; ?>>
-    prod3
-    </option>
-</select>
-
-<button type="submit" name="update">💾 Update</button>
-</form>
+    <hr>
+    <h2>✏️ Edit Record</h2>
+    <form method="post">
+        <input type="hidden" name="ID" value="<?php echo $row['ID']; ?>">
+        Logger ID: <input type="text" name="logger_id" value="<?php echo $row['logger_id']; ?>" required>
+        Path: <input type="text" name="path" value="<?php echo $row['path']; ?>" required>
+        <button type="submit" name="update">💾 Update</button>
+    </form>
 
 <?php } ?>
-
-<!-- 🔥 SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-function confirmDelete(id, actualLogger) {
-
-    Swal.fire({
-        title: '⚠️ Confirm Delete',
-        html: `
-            <p>Type Logger ID to confirm:</p>
-            <h3 style="color:red;">${actualLogger}</h3>
-            <input id="swal-input" class="swal2-input" placeholder="Enter Logger ID">
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: '🗑️ Delete',
-        confirmButtonColor: '#d33',
-
-        preConfirm: () => {
-            const entered = document.getElementById('swal-input').value.trim();
-
-            if (!entered) {
-                Swal.showValidationMessage('⚠️ Enter Logger ID');
-                return false;
-            }
-
-            if (entered !== actualLogger) {
-                Swal.showValidationMessage('❌ Wrong Logger ID!');
-                return false;
-            }
-
-            return true;
-        }
-
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = "?delete=" + id;
-        }
-    });
-}
-</script>
