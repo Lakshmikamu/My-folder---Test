@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plant Explorer</title>
+</head>
+<body>
+
+<h2>Plant Explorer</h2>
+
+<label>EPC</label>
+<select id="epc">
+    <option value="">Select EPC</option>
+</select>
+
+<br><br>
+
+<label>Plant</label>
+<select id="plant">
+    <option value="">Select Plant</option>
+</select>
+
+<br><br>
+
+<label>Logger</label>
+<select id="logger">
+    <option value="">Select Logger</option>
+</select>
+
+<br><br>
+
+<label>Device</label>
+<select id="device">
+    <option value="">Select Device</option>
+</select>
+
+<br><br>
+
+<label>Field</label>
+<select id="field">
+    <option value="">Select Field</option>
+</select>
+
+<br><br>
+
+<button id="getValue">Get Value</button>
+
+<div id="result"></div>
+<script>
+
+fetch('get_epcs.php')
+    .then(response => response.json())
+    .then(data => {
+
+        let epcDropdown = document.getElementById('epc');
+
+        data.forEach(epc => {
+
+            let option = document.createElement('option');
+
+            option.value = epc;
+            option.text = epc;
+
+            epcDropdown.appendChild(option);
+
+        });
+
+    });
+
+</script>
+<script>
+
+document.getElementById('epc').addEventListener('change', function() {
+
+    let epc = this.value;
+
+    let plantDropdown = document.getElementById('plant');
+
+    plantDropdown.innerHTML =
+        '<option value="">Select Plant</option>';
+
+    fetch('get_plants.php?epc_name=' + encodeURIComponent(epc))
+        .then(response => response.json())
+        .then(data => {
+
+            data.forEach(plant => {
+
+                let option = document.createElement('option');
+
+                option.value = plant;
+                option.text = plant;
+
+                plantDropdown.appendChild(option);
+
+            });
+
+        });
+
+});
+
+</script>
+<script>
+
+document.getElementById('plant').addEventListener('change', function() {
+
+    let plant = this.value;
+
+    let loggerDropdown = document.getElementById('logger');
+
+    loggerDropdown.innerHTML =
+        '<option value="">Select Logger</option>';
+
+    fetch('get_loggers.php?plant_name=' + encodeURIComponent(plant))
+        .then(response => response.json())
+        .then(data => {
+
+            data.forEach(logger => {
+
+                let option = document.createElement('option');
+
+                option.value = logger;
+                option.text = logger;
+
+                loggerDropdown.appendChild(option);
+
+            });
+
+        });
+
+});
+
+</script>
+<script>
+
+document.getElementById('logger').addEventListener('change', function() {
+
+    let epc = document.getElementById('epc').value;
+    let logger = this.value;
+
+    let deviceDropdown = document.getElementById('device');
+
+    deviceDropdown.innerHTML =
+        '<option value="">Select Device</option>';
+
+    fetch(
+        'get_devices.php?epc_name=' +
+        encodeURIComponent(epc) +
+        '&logger_id=' +
+        encodeURIComponent(logger)
+    )
+    .then(response => response.json())
+    .then(data => {
+
+        data.forEach(device => {
+
+            let option = document.createElement('option');
+
+            option.value = device;
+            option.text = device;
+
+            deviceDropdown.appendChild(option);
+
+        });
+
+    });
+
+});
+
+</script>
+<script>
+
+document.getElementById('device').addEventListener('change', function() {
+
+    let epc = document.getElementById('epc').value;
+    let logger = document.getElementById('logger').value;
+    let device = this.value;
+
+    let fieldDropdown = document.getElementById('field');
+
+    fieldDropdown.innerHTML =
+        '<option value="">Select Field</option>';
+
+    fetch(
+        'get_fields.php?epc_name=' +
+        encodeURIComponent(epc) +
+        '&logger_id=' +
+        encodeURIComponent(logger) +
+        '&device=' +
+        encodeURIComponent(device)
+    )
+    .then(response => response.json())
+    .then(data => {
+
+        data.forEach(field => {
+
+            let option = document.createElement('option');
+
+            option.value = field;
+            option.text = field;
+
+            fieldDropdown.appendChild(option);
+
+        });
+
+    });
+
+});
+
+</script>
+<script>
+
+document.getElementById('getValue').addEventListener('click', function() {
+
+    let epc = document.getElementById('epc').value;
+    let logger = document.getElementById('logger').value;
+    let device = document.getElementById('device').value;
+    let field = document.getElementById('field').value;
+
+    fetch(
+        'get_value.php?epc_name=' +
+        encodeURIComponent(epc) +
+        '&logger_id=' +
+        encodeURIComponent(logger) +
+        '&device=' +
+        encodeURIComponent(device) +
+        '&field=' +
+        encodeURIComponent(field)
+    )
+    .then(response => response.json())
+    .then(data => {
+
+        document.getElementById('result').innerHTML =
+            '<h3>Result</h3>' +
+            '<b>Timestamp:</b> ' + data.timestamp + '<br>' +
+            '<b>Value:</b> ' + data.value;
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
